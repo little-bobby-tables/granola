@@ -35,5 +35,5 @@ module Server (runServer, app) where
 
   modTags :: Redis.Connection -> UTF8.ByteString -> IO ()
   modTags redis encodedTags =
-    let tags = read (UTF8.toString encodedTags) :: [String]
-    in return  ()--forM_ tags $ \tag -> A.add tag
+    let tags = read (UTF8.toString encodedTags) :: [UTF8.ByteString]
+    in forM_ tags $ \tag -> A.add tag
