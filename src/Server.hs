@@ -1,10 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Server (runServer, app) where
-
   import qualified Data.ByteString.UTF8 as UTF8
-  import qualified Data.ByteString.Lazy.UTF8 as LUTF8
-
 
   import qualified Database.Redis as Redis
 
@@ -12,12 +9,9 @@ module Server (runServer, app) where
 
   import Control.Monad (join, forM_)
 
-  import Data.Aeson (encode)
-
-  import Network.Wai (Application, Response, pathInfo, queryString, responseLBS)
+  import Network.Wai (Application, pathInfo, queryString, responseLBS)
   import Network.Wai.Handler.Warp (run)
   import Network.HTTP.Types (ok200, badRequest400)
-  import Network.HTTP.Types.Header (hContentType)
 
   runServer :: IO ()
   runServer = do
@@ -31,6 +25,10 @@ module Server (runServer, app) where
         modify (param "add") (addTag redis)
         modify (param "remove") (removeTag redis)
         return $ responseLBS ok200 [] ""
+      "search":_ -> do
+        case (param "q") of
+          Just query -> return $ responseLBS ok200 [] ""
+          Nothing -> return $ responseLBS badRequest400 [] ""
       _ ->
         return $ responseLBS badRequest400 [] ""
     where

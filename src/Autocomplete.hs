@@ -7,7 +7,6 @@ module Autocomplete where
   import Database.Redis
 
   import Control.Monad
-  import Control.Monad.IO.Class (liftIO)
 
   import Data.Set (Set)
   import qualified Data.Set as Set
@@ -29,20 +28,19 @@ module Autocomplete where
       forM_ (prefixes tag) $ \prefix ->
         zincrby ("search:" @+ prefix) by utf8Tag
 
-  (@+) :: B.ByteString -> B.ByteString -> B.ByteString
-  (@+) = B.append
-
-  prefixes :: String -> Set B.ByteString
-  prefixes tag =
-    let tagPrefixes = filter ((> 1) . length) $ concatMap inits $ words tag
-    in Set.map (UTF8.fromString) $ Set.fromList tagPrefixes
-
-  search :: B.ByteString -> IO [(B.ByteString, Int)]
-  search prefix = do
-    conn <- checkedConnect defaultConnectInfo
-    liftIO $ runRedis conn $ highestRanking 10 >>= \case
+  search :: Connection -> UTF8.ByteString -> IO [(UTF8.ByteString, Int)]
+  search redis prefix =
+    runRedis redis $ highestRanking 10 >>= \case
         Right tags -> return $ map (\(tag, score) -> (tag, round score)) tags
         Left _ -> return []
       where highestRanking = withScoreAboveZero 0
             withScoreAboveZero = searchByKey (1 / 0) 1
             searchByKey = zrevrangebyscoreWithscoresLimit ("search:" @+ prefix)
+
+  prefixes :: String -> Set UTF8.ByteString
+  prefixes tag =
+    let tagPrefixes = filter ((> 1) . length) $ concatMap inits $ words tag
+    in Set.map (UTF8.fromString) $ Set.fromList tagPrefixes
+
+  (@+) :: UTF8.ByteString -> UTF8.ByteString -> UTF8.ByteString
+  (@+) = B.append
