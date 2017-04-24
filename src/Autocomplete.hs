@@ -28,14 +28,16 @@ module Autocomplete where
       forM_ (prefixes tag) $ \prefix ->
         zincrby ("search:" @+ prefix) by utf8Tag
 
-  search :: Connection -> UTF8.ByteString -> IO [(UTF8.ByteString, Int)]
+  search :: Connection -> UTF8.ByteString -> IO [(String, Int)]
   search redis prefix =
     runRedis redis $ highestRanking 10 >>= \case
-        Right tags -> return $ map (\(tag, score) -> (tag, round score)) tags
+        Right tags -> return $ map (\(tag, score) ->
+          (UTF8.toString tag, round score)) tags
         Left _ -> return []
-      where highestRanking = withScoreAboveZero 0
-            withScoreAboveZero = searchByKey (1 / 0) 1
-            searchByKey = zrevrangebyscoreWithscoresLimit ("search:" @+ prefix)
+      where
+        highestRanking = withScoreAboveZero 0
+        withScoreAboveZero = searchByKey (1 / 0) 1
+        searchByKey = zrevrangebyscoreWithscoresLimit ("search:" @+ prefix)
 
   prefixes :: String -> Set UTF8.ByteString
   prefixes tag =

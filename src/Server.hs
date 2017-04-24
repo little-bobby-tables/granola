@@ -5,13 +5,16 @@ module Server (runServer, app) where
 
   import qualified Database.Redis as Redis
 
-  import Autocomplete (AutocompleteModifier, addTag, removeTag)
+  import Data.Aeson (encode)
+
+  import Autocomplete (AutocompleteModifier, addTag, removeTag, search)
 
   import Control.Monad (join, forM_)
 
   import Network.Wai (Application, pathInfo, queryString, responseLBS)
   import Network.Wai.Handler.Warp (run)
   import Network.HTTP.Types (ok200, badRequest400)
+  import Network.HTTP.Types.Header (hContentType)
 
   runServer :: IO ()
   runServer = do
@@ -27,8 +30,11 @@ module Server (runServer, app) where
         return $ responseLBS ok200 [] ""
       "search":_ -> do
         case (param "q") of
-          Just query -> return $ responseLBS ok200 [] ""
-          Nothing -> return $ responseLBS badRequest400 [] ""
+          Just query -> search redis query >>= \results ->
+            return $ responseLBS ok200
+              [(hContentType, "application/json")] (encode results)
+          Nothing ->
+            return $ responseLBS badRequest400 [] ""
       _ ->
         return $ responseLBS badRequest400 [] ""
     where
