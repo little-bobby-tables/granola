@@ -14,26 +14,28 @@ module Autocomplete where
 
   import Data.List (inits)
 
+  type AutocompleteModifier = String -> IO ()
+
+  addTag :: Connection -> AutocompleteModifier
+  addTag redis tag = changeScore redis tag 1
+
+  removeTag :: Connection -> AutocompleteModifier
+  removeTag redis tag = changeScore redis tag (-1)
+
+  changeScore :: Connection -> String -> Integer -> IO ()
+  changeScore redis tag by =
+    let utf8Tag = UTF8.fromString tag
+    in runRedis redis $ do
+      forM_ (prefixes tag) $ \prefix ->
+        zincrby ("search:" @+ prefix) by utf8Tag
+
   (@+) :: B.ByteString -> B.ByteString -> B.ByteString
   (@+) = B.append
 
-  prefixes :: B.ByteString -> Set B.ByteString
+  prefixes :: String -> Set B.ByteString
   prefixes tag =
-    let utf8Tag = UTF8.toString tag
-        wordPrefixes = filter ((> 1) . length) $ concatMap inits $ words utf8Tag
-    in Set.fromList $ map (UTF8.fromString) $ wordPrefixes
-
-  add :: B.ByteString -> IO ()
-  add tag = changeScore tag 1
-
-  remove :: B.ByteString -> IO ()
-  remove tag = changeScore tag (-1)
-
-  changeScore :: B.ByteString -> Integer -> IO ()
-  changeScore tag by = do
-    conn <- checkedConnect defaultConnectInfo
-    runRedis conn $ do
-      forM_ (prefixes tag) $ \prefix -> zincrby ("search:" @+ prefix) by tag
+    let tagPrefixes = filter ((> 1) . length) $ concatMap inits $ words tag
+    in Set.map (UTF8.fromString) $ Set.fromList tagPrefixes
 
   search :: B.ByteString -> IO [(B.ByteString, Int)]
   search prefix = do
