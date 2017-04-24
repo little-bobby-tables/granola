@@ -1,0 +1,43 @@
+name: granola
+version: 0.1.0
+synopsis: Redis-based ordered autocomplete service
+description: See README at <https://github.com/little-bobby-tables/granola#readme>
+maintainer: little-bobby-tables <whitediamond@fanuniverse.org>
+license: PublicDomain
+github: little-bobby-tables/granola
+category: Web
+
+default-extensions:
+  - OverloadedStrings
+
+ghc-options: -Wall -O2
+
+dependencies:
+  - base >= 4.7 && < 5
+  - containers
+  - bytestring
+  - utf8-string
+  - hedis
+  - http-types
+  - warp
+  - wai
+  - aeson
+
+library:
+  source-dirs: src
+
+executables:
+  granola:
+    main: Main.hs
+    source-dirs: exec
+    dependencies:
+      - granola
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs:
+      - test
+      - src
+    dependencies:
+      - hspec
