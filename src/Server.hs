@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Server (runServer, app) where
-  import Strings (UTF8BSting, utf8ToString)
+  import Strings (UTF8BString, utf8ToString)
 
   import qualified Database.Redis as Redis
 
@@ -41,7 +41,7 @@ module Server (runServer, app) where
     where
       param name = join $ lookup name (queryString request)
 
-  modify :: Maybe UTF8BSting -> DataModifier -> IO ()
+  modify :: Maybe UTF8BString -> DataModifier -> IO ()
   modify (Just encodedTagList) modifier =
     let tagList = read (utf8ToString encodedTagList) :: [String]
     in forM_ tagList modifier

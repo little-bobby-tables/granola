@@ -1,5 +1,5 @@
 module Insertion (DataModifier, addTag, removeTag) where
-  import Strings (UTF8BSting, (@+), stringToUtf8)
+  import Strings (UTF8BString, (@+), stringToUtf8)
 
   import Data.Set (Set)
   import qualified Data.Set as Set
@@ -12,7 +12,7 @@ module Insertion (DataModifier, addTag, removeTag) where
 
   type DataModifier = String -> IO ()
 
-  prefixes :: String -> Set UTF8BSting
+  prefixes :: String -> Set UTF8BString
   prefixes tag =
     let tagPrefixes = filter ((> 1) . length) $ concatMap inits $ words tag
     in Set.map stringToUtf8 $ Set.fromList tagPrefixes

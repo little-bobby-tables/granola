@@ -1,18 +1,24 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Retrieval where
-  import Strings (UTF8BSting, (@+), utf8ToString)
+  import Strings (UTF8BString, (@+), utf8ToString)
 
-  import Database.Redis (Connection, runRedis,
+  import Database.Redis (Connection, RedisCtx, runRedis,
     zrevrangebyscoreWithscoresLimit)
 
-  search :: Connection -> UTF8BSting -> IO [(String, Int)]
-  search redis prefix =
-    runRedis redis $ highestRanking 10 >>= \case
-        Right tags -> return $ map (\(tag, score) ->
-          (utf8ToString tag, round score)) tags
-        Left _ -> return []
-      where
-        highestRanking = withScoreAboveZero 0
-        withScoreAboveZero = searchByKey (1 / 0) 1
-        searchByKey = zrevrangebyscoreWithscoresLimit ("search:" @+ prefix)
+  search :: Connection -> UTF8BString -> IO [(String, Int)]
+  search redis query =
+    let terms = words (utf8ToString query)
+    in case (length terms) of
+      1 -> searchByKeyWithLimit redis ("search:" @+ query) 10
+      _ -> return []
+
+  searchByKeyWithLimit :: Connection -> UTF8BString -> Integer -> IO [(String, Int)]
+  searchByKeyWithLimit redis key count =
+    runRedis redis $ highestRanking >>= \case
+      Right tags -> return $ map (\(tag, score) ->
+        (utf8ToString tag, round score)) tags
+      Left _ -> return []
+    where
+      highestRanking = searchWithScoreAboveZero 0 count
+      searchWithScoreAboveZero = zrevrangebyscoreWithscoresLimit key (1 / 0) 1
