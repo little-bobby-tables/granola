@@ -1,13 +1,14 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Server (runServer, app) where
-  import qualified Data.ByteString.UTF8 as UTF8
+  import Strings (UTF8BSting, utf8ToString)
 
   import qualified Database.Redis as Redis
 
   import Data.Aeson (encode)
 
-  import Autocomplete (AutocompleteModifier, addTag, removeTag, search)
+  import Insertion (DataModifier, addTag, removeTag)
+  import Retrieval (search)
 
   import Control.Monad (join, forM_)
 
@@ -40,8 +41,8 @@ module Server (runServer, app) where
     where
       param name = join $ lookup name (queryString request)
 
-  modify :: Maybe UTF8.ByteString -> AutocompleteModifier -> IO ()
+  modify :: Maybe UTF8BSting -> DataModifier -> IO ()
   modify (Just encodedTagList) modifier =
-    let tagList = read (UTF8.toString encodedTagList) :: [String]
+    let tagList = read (utf8ToString encodedTagList) :: [String]
     in forM_ tagList modifier
   modify Nothing _ = return ()
