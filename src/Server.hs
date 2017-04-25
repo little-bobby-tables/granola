@@ -33,7 +33,7 @@ module Server (runServer, app) where
         case (param "q") of
           Just query -> search redis query >>= \results ->
             return $ responseLBS ok200
-              [(hContentType, "application/json")] (encode results)
+              [(hContentType, "application/json;charset=utf-8")] (encode results)
           Nothing ->
             return $ responseLBS badRequest400 [] ""
       _ ->
