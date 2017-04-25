@@ -31,7 +31,7 @@ module Server (runServer, app) where
         return $ responseLBS ok200 [] ""
       "search":_ -> do
         case (param "q") of
-          Just query -> search redis query >>= \results ->
+          Just query -> search redis query 10 >>= \results ->
             return $ responseLBS ok200
               [(hContentType, "application/json;charset=utf-8")] (encode results)
           Nothing ->
