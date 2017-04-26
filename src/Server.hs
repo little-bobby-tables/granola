@@ -25,7 +25,7 @@ module Server (runServer, app) where
   app :: Redis.Connection -> Application
   app redis request respond = respond =<<
     case pathInfo request of
-      "modify":_ -> do
+      "index":_ -> do
         modify (param "add") (addTag redis)
         modify (param "remove") (removeTag redis)
         return $ responseLBS ok200 [] ""
