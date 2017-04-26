@@ -79,7 +79,9 @@ test-suite spec
     , wai
     , aeson
     , hspec
+    , hspec-wai
   other-modules:
+      IntegrationSpec
       Insertion
       Retrieval
       Server
