@@ -2,24 +2,15 @@ module IntegrationSpec where
   import Test.Hspec
   import Test.Hspec.Wai
 
-  import qualified Database.Redis as Redis
-
-  import Network.Wai (Application)
+  import Utils (redis, flushdb)
 
   import Server (app)
 
   main :: IO ()
   main = hspec spec
 
-  testApp :: IO Application
-  testApp = do
-    redis <- Redis.checkedConnect $ Redis.defaultConnectInfo
-      { Redis.connectDatabase = 16 }
-    _ <- Redis.runRedis redis (Redis.flushdb)
-    return $ app redis
-
   spec :: Spec
-  spec = with testApp $ do
+  spec = before_ flushdb $ with (app <$> redis) $ do
     describe "inserting tags" $ do
       context "adding a new tag" $ do
         it "increments its score" $ do

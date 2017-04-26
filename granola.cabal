@@ -82,6 +82,7 @@ test-suite spec
     , hspec-wai
   other-modules:
       IntegrationSpec
+      Utils
       Insertion
       Retrieval
       Server
